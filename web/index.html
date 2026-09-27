@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Task Reminder</title>
+  <meta name="description" content="A calm, Pokémon-themed task reminder.">
+  <meta name="theme-color" content="#4f9ea8">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/firebase-config.js"></script>
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <div class="waves" aria-hidden="true"></div>
+
+  <!-- Loading -->
+  <section id="screen-loading" class="screen center">
+    <div class="pokeball spin" aria-hidden="true"></div>
+    <p class="muted">Loading…</p>
+  </section>
+
+  <!-- Setup needed (Firebase config missing) -->
+  <section id="screen-setup" class="screen center" hidden>
+    <div class="card narrow">
+      <h1>Almost there!</h1>
+      <p>Firebase isn't configured yet. Fill in <code>web/firebase-config.js</code> — see the README for the steps.</p>
+    </div>
+  </section>
+
+  <!-- Login -->
+  <section id="screen-login" class="screen center" hidden>
+    <div class="login">
+      <img class="login-buddy bob" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/7.png" alt="Squirtle" width="160" height="160">
+      <h1>Task Reminder</h1>
+      <p class="muted">Gotta catch ’em all… your tasks, that is.</p>
+      <button id="btn-login" class="btn btn-google">
+        <span class="pokeball mini" aria-hidden="true"></span>
+        Sign in with Google
+      </button>
+      <p id="login-error" class="error" hidden></p>
+    </div>
+  </section>
+
+  <!-- Main -->
+  <section id="screen-main" class="screen" hidden>
+    <header class="topbar">
+      <div class="hello">
+        <img id="avatar" class="avatar" alt="" referrerpolicy="no-referrer">
+        <div>
+          <div class="muted small">Hello,</div>
+          <div id="user-name" class="name"></div>
+        </div>
+      </div>
+      <button id="btn-settings" class="icon-btn" aria-label="Settings">
+        <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7Zm7.4-2.5a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1c.5.4 1.1.7 1.7 1l.4 2.6h4l.4-2.6c.6-.3 1.2-.6 1.7-1l2.5 1 2-3.5-2.2-1.6Z"/></svg>
+      </button>
+    </header>
+
+    <div id="notif-banner" class="banner" hidden>
+      <span>Turn on reminders so you never miss a task.</span>
+      <button id="btn-banner-enable" class="btn btn-small">Enable</button>
+    </div>
+
+    <main id="task-list" class="task-list"></main>
+
+    <div id="empty" class="empty" hidden>
+      <img class="bob" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/7.png" alt="" width="140" height="140">
+      <h2>All clear!</h2>
+      <p class="muted">Squirtle is floating on calm waters. Tap + to add a task.</p>
+    </div>
+
+    <button id="buddy" class="buddy" aria-label="Buddy Squirtle">
+      <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/7.gif" alt="">
+      <span id="buddy-bubble" class="bubble" hidden></span>
+    </button>
+
+    <button id="btn-add" class="fab" aria-label="Add task">
+      <span class="pokeball fab-ball" aria-hidden="true"></span>
+      <span class="fab-plus" aria-hidden="true">+</span>
+    </button>
+  </section>
+
+  <!-- Task editor sheet -->
+  <div id="sheet-task" class="sheet-backdrop" hidden>
+    <form id="task-form" class="sheet" autocomplete="off">
+      <div class="sheet-handle"></div>
+      <h2 id="task-form-title">New task</h2>
+      <label>Title
+        <input id="f-title" name="title" required maxlength="120" placeholder="e.g. Submit assignment">
+      </label>
+      <div class="row">
+        <label>Due date
+          <input id="f-date" name="date" type="date" required>
+        </label>
+        <label>Time
+          <input id="f-time" name="time" type="time" required>
+        </label>
+      </div>
+      <label>Notes <span class="muted small">(optional)</span>
+        <textarea id="f-notes" name="notes" rows="3" maxlength="1000" placeholder="Anything to remember…"></textarea>
+      </label>
+      <div class="sheet-actions">
+        <button type="button" id="btn-delete" class="btn btn-ghost danger" hidden>Delete</button>
+        <span class="spacer"></span>
+        <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+        <button type="submit" class="btn">Save</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Settings sheet -->
+  <div id="sheet-settings" class="sheet-backdrop" hidden>
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <h2>Settings</h2>
+      <div class="setting">
+        <div>
+          <div class="setting-title">Reminders</div>
+          <div id="notif-status" class="muted small"></div>
+        </div>
+        <button id="btn-enable-notif" class="btn btn-small">Enable</button>
+      </div>
+      <div class="setting">
+        <div>
+          <div class="setting-title">Daily summary</div>
+          <div class="muted small">A morning list of your red tasks</div>
+        </div>
+        <select id="summary-hour" aria-label="Daily summary time"></select>
+      </div>
+      <p class="muted small legend">
+        <span class="dot red"></span> less than 3 days
+        <span class="dot yellow"></span> 3–7 days
+        <span class="dot green"></span> more than 7 days
+      </p>
+      <div class="sheet-actions">
+        <button id="btn-logout" class="btn btn-ghost danger">Sign out</button>
+        <span class="spacer"></span>
+        <button type="button" class="btn" data-close>Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Poké Ball catch animation -->
+  <div id="catch" class="catch" hidden aria-hidden="true">
+    <div class="catch-ball pokeball"></div>
+    <div class="catch-stars"><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="catch-text">Gotcha! Task caught!</div>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+</body>
+</html>

@@ -1,0 +1,60 @@
+name: Deploy web app
+
+on:
+  push:
+    branches: [main]
+    paths: ["web/**", "firebase.json", "firestore.rules", ".github/workflows/deploy.yml"]
+  workflow_dispatch:
+
+concurrency: deploy
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Load Firebase credentials
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          if [ -z "$FIREBASE_SERVICE_ACCOUNT" ]; then
+            echo "::error::Add the FIREBASE_SERVICE_ACCOUNT secret first (see README)."
+            exit 1
+          fi
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/sa.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/sa.json" >> "$GITHUB_ENV"
+          echo "PROJECT_ID=$(jq -r .project_id "$RUNNER_TEMP/sa.json")" >> "$GITHUB_ENV"
+
+      # Proves to Android that the APK and the website belong together, so the
+      # app opens full-screen without a browser URL bar.
+      - name: Write Digital Asset Links
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "::notice::No ANDROID_KEYSTORE_BASE64 secret; skipping assetlinks.json (the APK will show a URL bar)."
+            exit 0
+          fi
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.keystore"
+          SHA=$(keytool -list -v -keystore "$RUNNER_TEMP/release.keystore" -storepass "$ANDROID_KEYSTORE_PASSWORD" -alias taskreminder \
+            | grep -m1 'SHA256:' | sed 's/.*SHA256: *//')
+          mkdir -p web/.well-known
+          cat > web/.well-known/assetlinks.json <<JSON
+          [{
+            "relation": ["delegate_permission/common.handle_all_urls"],
+            "target": {
+              "namespace": "android_app",
+              "package_name": "com.anshmick27.taskreminder",
+              "sha256_cert_fingerprints": ["$SHA"]
+            }
+          }]
+          JSON
+          cat web/.well-known/assetlinks.json
+
+      - name: Deploy to Firebase Hosting + Firestore rules
+        run: npx --yes firebase-tools@13 deploy --only hosting,firestore:rules --project "$PROJECT_ID" --non-interactive
+
+      - name: Show app URL
+        run: echo "::notice::App is live at https://$PROJECT_ID.web.app"

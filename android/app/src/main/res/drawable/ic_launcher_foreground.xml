@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Poké Ball, centered in the adaptive icon safe zone -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path android:fillColor="#35505A" android:pathData="M26,54a28,28 0,1 1,56 0a28,28 0,1 1,-56 0z" />
+    <path android:fillColor="#E8897D" android:pathData="M28.5,54a25.5,25.5 0,0 1,51 0z" />
+    <path android:fillColor="#FDFDFD" android:pathData="M28.5,54a25.5,25.5 0,0 0,51 0z" />
+    <path android:fillColor="#35505A" android:pathData="M27,51.5h54v5h-54z" />
+    <path android:fillColor="#35505A" android:pathData="M45.5,54a8.5,8.5 0,1 1,17 0a8.5,8.5 0,1 1,-17 0z" />
+    <path android:fillColor="#FDFDFD" android:pathData="M48.5,54a5.5,5.5 0,1 1,11 0a5.5,5.5 0,1 1,-11 0z" />
+</vector>

@@ -1,0 +1,13 @@
+{
+  "name": "task-reminder-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "reminders": "node scripts/send-reminders.mjs",
+    "icons": "node scripts/gen-icons.mjs",
+    "test": "node --test scripts/*.test.mjs"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.7.0"
+  }
+}
