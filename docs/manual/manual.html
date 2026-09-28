@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Task Reminder – User Guide</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Source for docs/Task-Reminder-Manual.pdf. Rebuild with: node scripts/build-manual.mjs -->
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #e8f3f5; --surface: #ffffff; --surface-2: #f1f7f8;
+    --text: #28434d; --muted: #6f8b94; --primary: #4f9ea8; --primary-soft: #d6ecef; --line: #dbe9ec;
+    --red: #e8897d; --red-soft: #fbe8e4; --yellow: #e6be72; --yellow-soft: #fbf2dd; --green: #6cbca2; --green-soft: #e1f3ec;
+  }
+  @page { size: A4; margin: 14mm 15mm 16mm; }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { margin: 0; font-family: "Nunito", "DejaVu Sans", sans-serif; color: var(--text); font-size: 10.5pt; line-height: 1.5; background: #fff; }
+  main { max-width: 180mm; margin: 0 auto; }
+  h1, h2, h3 { font-weight: 800; line-height: 1.2; margin: 0; }
+  h2 { font-size: 15pt; margin: 0 0 3mm; display: flex; align-items: center; gap: 2.5mm; }
+  h2 .n { display: inline-grid; place-items: center; width: 7.5mm; height: 7.5mm; border-radius: 50%; background: var(--primary); color: #fff; font-size: 10.5pt; flex: none; }
+  h3 { font-size: 11pt; margin: 3mm 0 1mm; }
+  p { margin: 0 0 2mm; }
+  ul, ol { margin: 0 0 2mm; padding-left: 5mm; }
+  li { margin: 0 0 1mm; }
+  a { color: var(--primary); font-weight: 700; text-decoration: none; word-break: break-all; }
+  b, strong { font-weight: 800; }
+  .muted { color: var(--muted); }
+  .small { font-size: 9pt; }
+
+  .cover { display: flex; align-items: center; gap: 6mm; background: linear-gradient(135deg, var(--primary-soft), var(--bg)); border-radius: 6mm; padding: 7mm 8mm; margin-bottom: 6mm; }
+  .cover img { width: 20mm; height: 20mm; border-radius: 5mm; }
+  .cover h1 { font-size: 24pt; }
+  .cover p { margin: 1mm 0 0; font-size: 11pt; }
+
+  section { margin: 0 0 6mm; break-inside: avoid; }
+  .row { display: flex; gap: 7mm; align-items: flex-start; }
+  .row > .text { flex: 1; min-width: 0; }
+  .shot { width: 46mm; flex: none; border-radius: 5mm; box-shadow: 0 1.5mm 5mm rgba(40, 95, 110, .18); border: 0.4mm solid var(--line); }
+  .shot-pair { display: flex; gap: 5mm; flex: none; }
+  .shot-pair .shot { width: 40mm; }
+  .caption { text-align: center; font-size: 8.5pt; color: var(--muted); margin-top: 1.5mm; }
+
+  .card { background: var(--surface-2); border-radius: 4mm; padding: 3.5mm 4.5mm; margin: 2mm 0 3mm; }
+  .note { background: var(--primary-soft); border-radius: 4mm; padding: 3mm 4.5mm; margin: 2mm 0 3mm; }
+  .note b:first-child { color: var(--primary); }
+
+  table.colors { width: 100%; border-collapse: separate; border-spacing: 0 2mm; margin: 1mm 0 2mm; }
+  table.colors td { padding: 2.5mm 3.5mm; vertical-align: middle; }
+  table.colors td:first-child { border-radius: 3mm 0 0 3mm; width: 34mm; font-weight: 800; white-space: nowrap; }
+  table.colors td:last-child { border-radius: 0 3mm 3mm 0; }
+  tr.red td { background: var(--red-soft); } tr.red td:first-child { border-left: 1.6mm solid var(--red); }
+  tr.yellow td { background: var(--yellow-soft); } tr.yellow td:first-child { border-left: 1.6mm solid var(--yellow); }
+  tr.green td { background: var(--green-soft); } tr.green td:first-child { border-left: 1.6mm solid var(--green); }
+  table.colors img { width: 9mm; height: 9mm; vertical-align: middle; margin-right: 1.5mm; }
+
+  table.notify { width: 100%; border-collapse: collapse; margin: 1mm 0 2mm; font-size: 10pt; }
+  table.notify td { padding: 1.6mm 2mm; border-bottom: 0.3mm solid var(--line); vertical-align: top; }
+  table.notify td:first-child { width: 42mm; font-weight: 700; }
+
+  .page-break { break-before: page; }
+  footer { margin-top: 6mm; padding-top: 3mm; border-top: 0.3mm solid var(--line); font-size: 8.5pt; color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+
+<div class="cover">
+  <img src="images/icon.png" alt="">
+  <div>
+    <h1>Task Reminder</h1>
+    <p>A calm, Pokémon-themed to-do list that reminds you before things are due.</p>
+    <p class="small muted">User guide · Android app &amp; web</p>
+  </div>
+</div>
+
+<section>
+  <h2><span class="n">1</span>Install the app</h2>
+  <div class="row">
+    <div class="text">
+      <p><b>On Android</b> (Android 7 or newer):</p>
+      <ol>
+        <li>Make sure <b>Google Chrome</b> is installed. The app runs on Chrome, even if another browser is your default. Without Chrome, reminders won't work.</li>
+        <li>Open the APK file you were sent, or download the newest one here:<br>
+          <a href="https://github.com/Ansh-mick27/task-reminder-app/releases/latest/download/task-reminder.apk">github.com/Ansh-mick27/task-reminder-app/releases/latest/download/task-reminder.apk</a></li>
+        <li>If Android asks, allow installing apps from this source (your browser or file manager), then tap <b>Install</b>.</li>
+        <li>Open <b>Task Reminder</b> from your home screen.</li>
+      </ol>
+      <p><b>On any computer or phone browser</b>, go to<br>
+        <a href="https://task-reminder-f7a06.web.app">https://task-reminder-f7a06.web.app</a></p>
+      <div class="note"><b>Updates:</b> most updates arrive on their own the next time you open the app. You only need to install a new APK if you're told to.</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="n">2</span>Sign in with Google</h2>
+  <div class="row">
+    <div class="text">
+      <p>Tap <b>Sign in with Google</b> and choose your account.</p>
+      <ul>
+        <li>Your tasks are saved to your Google account, so they're there every time you sign in, on any device.</li>
+        <li>Only you can see your tasks. Each person who signs in gets their own private list.</li>
+        <li>Your list also opens without internet; changes sync when you're back online.</li>
+      </ul>
+    </div>
+    <div>
+      <img class="shot" src="images/login.png" alt="Sign-in screen">
+      <div class="caption">Sign-in screen</div>
+    </div>
+  </div>
+</section>
+
+<section class="page-break">
+  <h2><span class="n">3</span>Your tasks at a glance</h2>
+  <div class="row">
+    <div class="text">
+      <p>Every task is colored by how soon it's due. <b>Red tasks always stay at the top</b>, and colors update on their own as time passes.</p>
+      <table class="colors">
+        <tr class="red"><td><img src="images/charmander.gif" alt="">Red</td><td><b>Urgent</b>: due in less than 3 days, or overdue.</td></tr>
+        <tr class="yellow"><td><img src="images/pikachu.gif" alt="">Yellow</td><td><b>Coming up</b>: due in 3 to 7 days.</td></tr>
+        <tr class="green"><td><img src="images/bulbasaur.gif" alt="">Green</td><td><b>Later</b>: more than 7 days away.</td></tr>
+      </table>
+      <p>Each card shows the time left (for example <i>in 1 day</i> or <i>Overdue by 2 h</i>) and the exact due date and time.</p>
+      <p>Squirtle, in the bottom-left corner, is your buddy. Tap it for a little encouragement.</p>
+    </div>
+    <div>
+      <img class="shot" src="images/tasks.png" alt="Task list">
+      <div class="caption">Task list</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="n">4</span>Add, edit and complete tasks</h2>
+  <div class="row">
+    <div class="text">
+      <h3>Add a task</h3>
+      <p>Tap the <b>Poké Ball +</b> button (bottom right). Enter a <b>title</b>, the <b>due date and time</b>, and optional <b>notes</b>, then tap <b>Save</b>.</p>
+      <h3>Edit or delete</h3>
+      <p>Tap a task card to change it. To remove it, tap <b>Delete</b> in the same screen.</p>
+      <h3>Mark as done</h3>
+      <p>Tap the small ball on the left of a task. A Poké Ball catches it 🎉 and the task moves to the <b>Done</b> list at the bottom. Tap <b>Done</b> to show or hide it. To reopen a finished task, tap its ball again.</p>
+    </div>
+    <div class="shot-pair">
+      <div>
+        <img class="shot" src="images/add-task.png" alt="New task form">
+        <div class="caption">New task</div>
+      </div>
+      <div>
+        <img class="shot" src="images/catch.png" alt="Poké Ball catch animation">
+        <div class="caption">Task caught!</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="page-break">
+  <h2><span class="n">5</span>Turn on reminders</h2>
+  <div class="row">
+    <div class="text">
+      <p>The first time you open the app, tap <b>Enable</b> on the banner (or in <b>Settings ⚙</b>) and choose <b>Allow</b>. Do this once on each phone or computer where you want alerts.</p>
+      <table class="notify">
+        <tr><td>🔴 Turns urgent</td><td>when a task has less than 3 days left</td></tr>
+        <tr><td>🔥 Due tomorrow</td><td>1 day before the due time</td></tr>
+        <tr><td>⏰ Due now</td><td>at the due time</td></tr>
+        <tr><td>☀️ Daily summary</td><td>every morning, a list of your red tasks (8:00 AM by default)</td></tr>
+      </table>
+      <p class="small muted">Reminders are checked about every 10 minutes, so an alert can arrive a few minutes after the exact time.</p>
+      <h3>Settings ⚙</h3>
+      <ul>
+        <li><b>Reminders</b>: shows whether alerts are on for this device.</li>
+        <li><b>Daily summary</b>: pick the time, or choose <b>Off</b>.</li>
+        <li><b>Sign out</b>: stops alerts on this device.</li>
+      </ul>
+    </div>
+    <div>
+      <img class="shot" src="images/settings.png" alt="Settings">
+      <div class="caption">Settings</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="n">6</span>If something isn't working</h2>
+  <div class="card">
+    <h3 style="margin-top:0">No notifications arrive</h3>
+    <ul>
+      <li>Open <b>Settings ⚙</b> in the app. It should say <b>"On — you'll get alerts on this device"</b>. If not, tap <b>Enable</b>.</li>
+      <li>Check <b>Android Settings → Apps → Task Reminder → Notifications</b> is turned on.</li>
+      <li>Make sure <b>Google Chrome</b> is installed and up to date.</li>
+      <li>Battery savers can delay alerts. If they're late, allow Chrome to run in the background.</li>
+    </ul>
+    <h3>"Chrome is blocking notifications for this app"</h3>
+    <p>Open <b>Chrome</b>, go to <b>task-reminder-f7a06.web.app</b>, tap the icon left of the address → <b>Permissions</b> → <b>Notifications</b> → <b>Allow</b>. Then close and reopen the app and tap <b>Enable</b> again.</p>
+    <h3>Still stuck?</h3>
+    <p>In <b>Settings ⚙</b>, tap <b>Reminder details</b> and send a screenshot of it to whoever shared the app with you. It shows exactly what's going wrong.</p>
+  </div>
+</section>
+
+<footer>
+  Task Reminder is a personal project, shared for personal use and not published on an app store.
+  Pokémon and Pokémon character names are trademarks of Nintendo, Game Freak and The Pokémon Company; sprites come from the open PokeAPI project.
+</footer>
+
+</main>
+</body>
+</html>
