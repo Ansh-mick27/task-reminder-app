@@ -2,5 +2,7 @@
 <resources>
     <color name="primary">#4F9EA8</color>
     <color name="background">#E8F3F5</color>
+    <!-- Dark mode: matches the web app's dark --bg -->
+    <color name="background_dark">#0F2129</color>
     <color name="ic_launcher_background">#4F9EA8</color>
 </resources>
