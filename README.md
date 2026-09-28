@@ -11,6 +11,12 @@ A calm, Pokémon-themed task reminder in an "Ocean mist" palette.
 
 > Pokémon sprites come from the open [PokeAPI sprite set](https://github.com/PokeAPI/sprites). Pokémon is © Nintendo / Game Freak / The Pokémon Company. This app is for personal use only and must not be published to an app store.
 
+## User manual
+
+A short illustrated guide for people you share the app with: [`docs/Task-Reminder-Manual.pdf`](docs/Task-Reminder-Manual.pdf). It covers installing, signing in, colors, adding and completing tasks, reminders, and troubleshooting.
+
+Its source is [`docs/manual/manual.html`](docs/manual/manual.html). After editing it, rebuild the PDF with `node scripts/build-manual.mjs`, which needs Playwright's Chromium.
+
 ## How it fits together
 
 | Part | Where | What it does |
