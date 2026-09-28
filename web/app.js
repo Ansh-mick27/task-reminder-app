@@ -171,6 +171,7 @@ function withTimeout(promise, ms, what) {
 }
 
 let enabling = false;
+let lastNotifError = "";
 async function enableNotifications(silent = false) {
   if (enabling) return;
   const m = await messagingReady;
@@ -201,6 +202,7 @@ async function enableNotifications(silent = false) {
     if (!silent) toast("Reminders are on! 🔔");
   } catch (e) {
     console.error(e);
+    lastNotifError = `${e.name || ""} ${e.code || ""} ${e.message || ""}`.trim();
     if (silent) return;
     const msg = `${e.code || ""} ${e.message || ""}`;
     if (/permission denied|permission-blocked|NotAllowedError/i.test(msg) && !/firestore/i.test(msg)) {
@@ -237,6 +239,36 @@ async function refreshNotifUI() {
   const canEnable = perm === "default" || perm === "unregistered";
   $("btn-enable-notif").hidden = !canEnable;
   $("notif-banner").hidden = !canEnable;
+  renderNotifDiag();
+}
+
+// What the browser reports about notifications/push on this device, shown
+// under Settings → "Reminder details" to help troubleshoot.
+async function renderNotifDiag() {
+  const q = async (desc) => {
+    try { return (await navigator.permissions.query(desc)).state; } catch (e) { return `n/a (${e.name})`; }
+  };
+  let sw = "none";
+  try {
+    const reg = await navigator.serviceWorker?.getRegistration();
+    if (reg) sw = reg.active ? `active (${reg.active.state})` : reg.installing ? "installing" : reg.waiting ? "waiting" : "registered";
+  } catch {}
+  let sub = "none";
+  try {
+    const reg = await navigator.serviceWorker?.getRegistration();
+    if (reg?.pushManager) sub = (await reg.pushManager.getSubscription()) ? "yes" : "none";
+  } catch (e) { sub = `error (${e.name})`; }
+  $("notif-diag").textContent = [
+    `Notification.permission: ${"Notification" in window ? Notification.permission : "unsupported"}`,
+    `notifications permission: ${await q({ name: "notifications" })}`,
+    `push permission: ${await q({ name: "push", userVisibleOnly: true })}`,
+    `service worker: ${sw}`,
+    `push subscription: ${sub}`,
+    `saved token on this device: ${hasPushToken() ? "yes" : "no"}`,
+    `installed app (standalone): ${matchMedia("(display-mode: standalone)").matches ? "yes" : "no"}`,
+    `last error: ${lastNotifError || "none"}`,
+    `browser: ${navigator.userAgent}`,
+  ].join("\n");
 }
 
 $("btn-enable-notif").addEventListener("click", () => enableNotifications());
