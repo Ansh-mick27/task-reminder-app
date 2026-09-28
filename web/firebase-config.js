@@ -8,11 +8,11 @@
 //
 // Loaded as a classic script by both the page and the service worker.
 self.FIREBASE_CONFIG = {
-  apiKey: "REPLACE_ME",
-  authDomain: "REPLACE_ME.firebaseapp.com",
-  projectId: "REPLACE_ME",
-  storageBucket: "REPLACE_ME.appspot.com",
-  messagingSenderId: "REPLACE_ME",
-  appId: "REPLACE_ME",
+  apiKey: "AIzaSyBKyTCQRpLhD-TzRtIhtXhLL94t9WuJvSk",
+  authDomain: "task-reminder-f7a06.firebaseapp.com",
+  projectId: "task-reminder-f7a06",
+  storageBucket: "task-reminder-f7a06.firebasestorage.app",
+  messagingSenderId: "528536453742",
+  appId: "1:528536453742:web:7f8d45c587d1f17da61c7f",
 };
-self.FIREBASE_VAPID_KEY = "REPLACE_ME";
+self.FIREBASE_VAPID_KEY = "BDCClXQsv_59r9LBi3rz6tPZKw1nopDI9M3Se-v0OsjOixLqPm_VX5nDQTYQuzQKJLiV0RexWqKnmAlK18ZU69M";
