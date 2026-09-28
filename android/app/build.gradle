@@ -1,0 +1,51 @@
+// Trusted Web Activity wrapper: opens the hosted web app full-screen in
+// Chrome, so Google sign-in and push notifications work.
+// Built by .github/workflows/build-apk.yml, which passes -PhostName etc.
+plugins {
+    id 'com.android.application'
+}
+
+def hostName = project.findProperty('hostName') ?: 'example.web.app'
+def launchUrl = "https://${hostName}/"
+
+android {
+    namespace 'com.anshmick27.taskreminder'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'com.anshmick27.taskreminder'
+        minSdk 24
+        targetSdk 34
+        versionCode((project.findProperty('versionCode') ?: '1') as int)
+        versionName "1.0.${versionCode}"
+
+        manifestPlaceholders = [hostName: hostName, launchUrl: launchUrl]
+        resValue 'string', 'asset_statements',
+            '[{\\"relation\\": [\\"delegate_permission/common.handle_all_urls\\"], \\"target\\": {\\"namespace\\": \\"web\\", \\"site\\": \\"https://' + hostName + '\\"}}]'
+    }
+
+    signingConfigs {
+        release {
+            storeFile file(project.findProperty('keystorePath') ?: 'release.keystore')
+            storePassword project.findProperty('keystorePassword') ?: ''
+            keyAlias project.findProperty('keyAlias') ?: 'taskreminder'
+            keyPassword project.findProperty('keystorePassword') ?: ''
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.5.0'
+}

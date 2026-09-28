@@ -1,0 +1,10 @@
+node_modules/
+.firebase/
+*.keystore
+*.jks
+service-account*.json
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+web/.well-known/assetlinks.json
