@@ -161,21 +161,37 @@ async function initUserDoc(u) {
 }
 
 // ---------- Notifications ----------
+// Rejects if a step hangs (e.g. a permission prompt that never answers), so
+// the button always ends with a result instead of silently doing nothing.
+function withTimeout(promise, ms, what) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error(`${what} timed out`)), ms)),
+  ]);
+}
+
+let enabling = false;
 async function enableNotifications(silent = false) {
+  if (enabling) return;
   const m = await messagingReady;
   if (!m || !("Notification" in window)) {
     if (!silent) toast("Notifications aren't supported in this browser.");
     return;
   }
+  enabling = true;
+  const buttons = [$("btn-enable-notif"), $("btn-banner-enable")];
+  for (const b of buttons) { b.disabled = true; b.textContent = "Enabling…"; }
   try {
-    const perm = silent ? Notification.permission : await Notification.requestPermission();
-    refreshNotifUI();
+    const perm = silent ? Notification.permission : await withTimeout(Notification.requestPermission(), 60000, "Permission prompt");
     if (perm !== "granted") {
       if (!silent) toast("Notifications are blocked. Allow them in your browser settings.");
       return;
     }
-    const reg = await swReg;
-    const token = await getToken(m, { vapidKey: self.FIREBASE_VAPID_KEY, serviceWorkerRegistration: reg || undefined });
+    // Push subscriptions need an active service worker, not just a registered one.
+    await withTimeout(swReg, 15000, "Service worker");
+    const reg = await withTimeout(navigator.serviceWorker.ready, 15000, "Service worker");
+    const token = await withTimeout(
+      getToken(m, { vapidKey: self.FIREBASE_VAPID_KEY, serviceWorkerRegistration: reg }), 20000, "Push registration");
     if (!token || !user) return;
     await setDoc(doc(db, "users", user.uid, "tokens", token), {
       createdAt: serverTimestamp(),
@@ -185,22 +201,42 @@ async function enableNotifications(silent = false) {
     if (!silent) toast("Reminders are on! 🔔");
   } catch (e) {
     console.error(e);
-    if (!silent) toast(`Couldn't enable reminders: ${e.code || e.message}`, 5000);
+    if (silent) return;
+    const msg = `${e.code || ""} ${e.message || ""}`;
+    if (/permission denied|permission-blocked|NotAllowedError/i.test(msg) && !/firestore/i.test(msg)) {
+      // In the Android app, the site's notification setting in Chrome must
+      // also be "Allow", separately from the app's own Android permission.
+      toast("Chrome is blocking notifications for this app. In Chrome, open task-reminder-f7a06.web.app → tap the icon left of the address → Permissions → Notifications → Allow. Then reopen the app.", 12000);
+    } else {
+      toast(`Couldn't enable reminders: ${e.code || e.message}`, 8000);
+    }
+  } finally {
+    enabling = false;
+    for (const b of buttons) { b.disabled = false; b.textContent = "Enable"; }
+    refreshNotifUI();
   }
+}
+
+function hasPushToken() {
+  try { return !!localStorage.getItem("fcmToken"); } catch { return false; }
 }
 
 async function refreshNotifUI() {
   const supported = !!(await messagingReady) && "Notification" in window;
-  const perm = supported ? Notification.permission : "unsupported";
+  let perm = supported ? Notification.permission : "unsupported";
+  // Permission alone isn't enough: this device must also be registered for push.
+  if (perm === "granted" && !hasPushToken()) perm = "unregistered";
   const status = {
     granted: "On — you'll get alerts on this device",
+    unregistered: "Allowed, but not set up on this device yet",
     denied: "Blocked — allow notifications in browser settings",
     default: "Off",
     unsupported: "Not supported in this browser",
   }[perm];
   $("notif-status").textContent = status;
-  $("btn-enable-notif").hidden = perm !== "default";
-  $("notif-banner").hidden = perm !== "default";
+  const canEnable = perm === "default" || perm === "unregistered";
+  $("btn-enable-notif").hidden = !canEnable;
+  $("notif-banner").hidden = !canEnable;
 }
 
 $("btn-enable-notif").addEventListener("click", () => enableNotifications());
