@@ -59,7 +59,7 @@ After that, anything merged to `main` updates the app automatically. The APK onl
 
 ## Troubleshooting
 
-- **Deploy fails with "permission denied" / 403**: in [Google Cloud IAM](https://console.cloud.google.com/iam-admin/iam), find the `firebase-adminsdk-…` service account, click ✏️, and add the roles **Firebase Hosting Admin**, **Firebase Rules Admin**, and **Service Usage Consumer**.
+- **Deploy fails with "permission denied" / 403**: the service account needs a role. Copy its email from Firebase **⚙ Project settings → Service accounts** (it looks like `firebase-adminsdk-…@<project>.iam.gserviceaccount.com`). Then in [Google Cloud IAM](https://console.cloud.google.com/iam-admin/iam), tap **Grant access**, paste the email, pick the **Firebase Admin** role, and **Save**. It can take a few minutes to apply.
 - **No notifications**: check that the app's **Settings** screen says reminders are **On**. Then check **Actions → Send reminders** for errors; you can also trigger it by hand with **Run workflow**. GitHub can delay scheduled runs by a few minutes.
 - **APK shows a browser address bar at the top**: the web app has to be deployed *after* the `ANDROID_KEYSTORE_*` secrets were added. Re-run **Deploy web app**.
 

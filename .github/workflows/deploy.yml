@@ -53,10 +53,8 @@ jobs:
           JSON
           cat web/.well-known/assetlinks.json
 
-      # Troubleshooting aid: shows which service account the key belongs to and
-      # which deploy permissions Google grants it. Never fails the job.
-      - name: Check service account permissions
-        continue-on-error: true
+      # Short-lived Google access token for the REST calls below.
+      - name: Get access token
         run: |
           SA="$RUNNER_TEMP/sa.json"
           EMAIL=$(jq -r .client_email "$SA")
@@ -65,23 +63,40 @@ jobs:
           b64() { openssl base64 -e -A | tr '+/' '-_' | tr -d '='; }
           NOW=$(date +%s)
           HEAD=$(printf '{"alg":"RS256","typ":"JWT"}' | b64)
-          CLAIMS=$(printf '{"iss":"%s","scope":"https://www.googleapis.com/auth/cloud-platform","aud":"https://oauth2.googleapis.com/token","iat":%s,"exp":%s}' "$EMAIL" "$NOW" "$((NOW + 600))" | b64)
+          CLAIMS=$(printf '{"iss":"%s","scope":"https://www.googleapis.com/auth/cloud-platform","aud":"https://oauth2.googleapis.com/token","iat":%s,"exp":%s}' "$EMAIL" "$NOW" "$((NOW + 1800))" | b64)
           SIG=$(printf '%s.%s' "$HEAD" "$CLAIMS" | openssl dgst -sha256 -sign "$RUNNER_TEMP/key.pem" | b64)
           rm -f "$RUNNER_TEMP/key.pem"
           TOKEN=$(curl -sS https://oauth2.googleapis.com/token \
             -d grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer -d assertion="$HEAD.$CLAIMS.$SIG" | jq -r .access_token)
+          if [ -z "$TOKEN" ] || [ "$TOKEN" = null ]; then echo "::error::Couldn't get an access token from the service account key."; exit 1; fi
           echo "::add-mask::$TOKEN"
-          echo "Permissions granted on project $PROJECT_ID:"
-          curl -sS -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
-            "https://cloudresourcemanager.googleapis.com/v1/projects/$PROJECT_ID:testIamPermissions" \
-            -d '{"permissions":["firebaserules.rulesets.test","firebaserules.rulesets.create","firebaserules.releases.update","firebasehosting.sites.update","firebase.projects.get"]}'
-          echo
-          echo "Firebase Rules API status:"
-          curl -sS -H "Authorization: Bearer $TOKEN" \
-            "https://serviceusage.googleapis.com/v1/projects/$PROJECT_ID/services/firebaserules.googleapis.com" | jq '{state, error}'
+          echo "GCP_TOKEN=$TOKEN" >> "$GITHUB_ENV"
 
-      - name: Deploy to Firebase Hosting + Firestore rules
-        run: npx --yes firebase-tools@13 deploy --only hosting,firestore:rules --project "$PROJECT_ID" --non-interactive
+      # Published through the Rules REST API rather than `firebase deploy`:
+      # the CLI first calls the rules "test" endpoint, which the default
+      # Firebase Admin role doesn't allow; creating/releasing rulesets it does.
+      - name: Publish Firestore security rules
+        run: |
+          API="https://firebaserules.googleapis.com/v1/projects/$PROJECT_ID"
+          AUTH="Authorization: Bearer $GCP_TOKEN"
+          BODY=$(jq -n --rawfile src firestore.rules '{source: {files: [{name: "firestore.rules", content: $src}]}}')
+          RES=$(curl -sS -X POST -H "$AUTH" -H "Content-Type: application/json" "$API/rulesets" -d "$BODY")
+          RULESET=$(echo "$RES" | jq -r '.name // empty')
+          if [ -z "$RULESET" ]; then echo "$RES"; echo "::error::Firestore rules were rejected (see above)."; exit 1; fi
+          echo "Created $RULESET"
+          REL="projects/$PROJECT_ID/releases/cloud.firestore"
+          CODE=$(curl -sS -o "$RUNNER_TEMP/rel.json" -w '%{http_code}' -X PATCH -H "$AUTH" -H "Content-Type: application/json" \
+            "https://firebaserules.googleapis.com/v1/$REL" \
+            -d "$(jq -n --arg n "$REL" --arg r "$RULESET" '{release: {name: $n, rulesetName: $r}}')")
+          if [ "$CODE" = 404 ]; then
+            CODE=$(curl -sS -o "$RUNNER_TEMP/rel.json" -w '%{http_code}' -X POST -H "$AUTH" -H "Content-Type: application/json" \
+              "$API/releases" -d "$(jq -n --arg n "$REL" --arg r "$RULESET" '{name: $n, rulesetName: $r}')")
+          fi
+          cat "$RUNNER_TEMP/rel.json"; echo
+          case "$CODE" in 2*) echo "Firestore rules published.";; *) echo "::error::Couldn't release Firestore rules (HTTP $CODE)."; exit 1;; esac
+
+      - name: Deploy to Firebase Hosting
+        run: npx --yes firebase-tools@13 deploy --only hosting --project "$PROJECT_ID" --non-interactive
 
       - name: Show app URL
         run: echo "::notice::App is live at https://$PROJECT_ID.web.app"
