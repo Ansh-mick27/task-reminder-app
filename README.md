@@ -1,80 +1,27 @@
-# Task Reminder 🌊
+<p align="center">
+  <img src="docs/manual/images/icon.png" width="84" alt="">
+</p>
 
-A calm, Pokémon-themed task reminder in an "Ocean mist" palette.
+<h1 align="center">Task Reminder</h1>
 
-- **Color-coded tasks**: 🔴 red if due in less than 3 days (or overdue), 🟡 yellow for 3–7 days, 🟢 green for more than 7 days. Red is always on top, with Charmander, Pikachu, and Bulbasaur leading each group.
-- **Google sign-in**: tasks are saved to your account (Firebase Firestore) and are there again when you log back in, on any device.
-- **Push reminders**: you get a notification when a task turns red, 1 day before it's due, and when it's due, plus a daily morning summary of red tasks at a time you choose.
-- **Tasks** have a title, due date and time, and optional notes. You can edit or delete them, and checking one off plays a Poké Ball catch animation before it moves to the **Done** list.
-- Squirtle floats in the corner as a buddy; tap it.
-- **Android APK**: a Trusted Web Activity (TWA) built automatically by GitHub Actions.
+<p align="center">A calm, Pokémon-themed to-do list that reminds you before things are due.</p>
 
-> Pokémon sprites come from the open [PokeAPI sprite set](https://github.com/PokeAPI/sprites). Pokémon is © Nintendo / Game Freak / The Pokémon Company. This app is for personal use only and must not be published to an app store.
+<p align="center">
+  <img src="docs/manual/images/tasks.png" width="210" alt="Task list">
+  &nbsp;
+  <img src="docs/manual/images/add-task.png" width="210" alt="Adding a task">
+  &nbsp;
+  <img src="docs/manual/images/catch.png" width="210" alt="Completing a task">
+</p>
 
-## User manual
+- 🔴 **Red**: due in less than 3 days, always on top · 🟡 **Yellow**: 3–7 days · 🟢 **Green**: more than 7 days
+- 🔔 Notifications when a task turns red, a day before it's due, when it's due, plus a morning summary
+- 🔐 Sign in with Google, and your tasks are saved to your account
 
-A short illustrated guide for people you share the app with: [`docs/Task-Reminder-Manual.pdf`](docs/Task-Reminder-Manual.pdf). It covers installing, signing in, colors, adding and completing tasks, reminders, and troubleshooting.
+## Get it
 
-Its source is [`docs/manual/manual.html`](docs/manual/manual.html). After editing it, rebuild the PDF with `node scripts/build-manual.mjs`, which needs Playwright's Chromium.
+- **Android app:** [download the APK](https://github.com/Ansh-mick27/task-reminder-app/releases/latest/download/task-reminder.apk). Google Chrome must be installed.
+- **Web:** <https://task-reminder-f7a06.web.app>
+- **How to use it:** [user guide (PDF)](docs/Task-Reminder-Manual.pdf)
 
-## How it fits together
-
-| Part | Where | What it does |
-| --- | --- | --- |
-| Web app | `web/` | Plain HTML/CSS/JS with no build step. Hosted on Firebase Hosting. |
-| Database + login | Firebase | Google Auth and Firestore. Rules in `firestore.rules` let each user see only their own tasks. |
-| Reminders | `.github/workflows/reminders.yml` → `scripts/send-reminders.mjs` | Runs every 10 minutes on GitHub (free for public repos) and sends push notifications through Firebase Cloud Messaging. |
-| Deploy | `.github/workflows/deploy.yml` | Every push to `main` that touches `web/` publishes the site. |
-| APK | `.github/workflows/build-apk.yml` + `android/` | Builds the Android app and publishes it as a GitHub Release. |
-
-Everything stays on the free Firebase **Spark** plan, so no credit card is needed.
-
-## One-time setup (all doable from a phone)
-
-Tip: in Chrome on your phone, turn on **⋮ → Desktop site** for the Firebase and GitHub settings pages. It makes them much easier to use.
-
-### 1. Create the Firebase project
-1. Go to <https://console.firebase.google.com> → **Create a project**, give it a name, and finish. Google Analytics is optional.
-2. **Build → Authentication → Get started → Google → Enable**. Pick your support email and **Save**.
-3. **Build → Firestore Database → Create database**. Pick a location near you and **Start in production mode**.
-4. **Build → Hosting → Get started**, then just click through with **Next**. You don't need to run the commands it shows.
-
-### 2. Get the web config
-1. Open **⚙ Project settings → General → Your apps → `</>` (Web)**. Give it any nickname and **Register app**.
-2. Copy the `firebaseConfig` values it shows.
-3. Open **⚙ Project settings → Cloud Messaging → Web Push certificates → Generate key pair**, and copy the key.
-4. Put the values from steps 2 and 3 into [`web/firebase-config.js`](web/firebase-config.js), or just paste them to Claude and ask it to do it. These values are not secret.
-
-### 3. Add GitHub secrets
-Open the repo on GitHub → **Settings → Secrets and variables → Actions → New repository secret** and add:
-
-| Name | Value |
-| --- | --- |
-| `FIREBASE_SERVICE_ACCOUNT` | Firebase **⚙ Project settings → Service accounts → Generate new private key**. It downloads a `.json` file. Open it in any text viewer, copy **all** of it, and paste it here. |
-| `ANDROID_KEYSTORE_BASE64` | The app's signing key (Claude gave you this as a text file). |
-| `ANDROID_KEYSTORE_PASSWORD` | The signing key's password (also from Claude). |
-
-⚠️ Never commit the service-account JSON or the keystore to the repo. It is public.
-
-### 4. Go live
-1. Merge the pull request into `main`. **Deploy web app** runs automatically, and your app is live at `https://<project-id>.web.app`.
-2. **Actions → Build Android APK → Run workflow**. When it finishes, open **Releases** on the repo page, download `task-reminder.apk`, and install it. Android will ask you to allow installing from your browser.
-3. Open the app, sign in with Google, and tap **Enable** on the reminders banner.
-
-After that, anything merged to `main` updates the app automatically. The APK only needs rebuilding if `android/` changes.
-
-## Troubleshooting
-
-- **Deploy fails with "permission denied" / 403**: the service account needs a role. Copy its email from Firebase **⚙ Project settings → Service accounts** (it looks like `firebase-adminsdk-…@<project>.iam.gserviceaccount.com`). Then in [Google Cloud IAM](https://console.cloud.google.com/iam-admin/iam), tap **Grant access**, paste the email, pick the **Firebase Admin** role, and **Save**. It can take a few minutes to apply.
-- **No notifications**: check that the app's **Settings** screen says reminders are **On**. Then check **Actions → Send reminders** for errors; you can also trigger it by hand with **Run workflow**. GitHub can delay scheduled runs by a few minutes.
-- **APK shows a browser address bar at the top**: the web app has to be deployed *after* the `ANDROID_KEYSTORE_*` secrets were added. Re-run **Deploy web app**.
-
-## Development
-
-```sh
-npm install
-npm test            # urgency rule tests
-npm run icons       # regenerate PNG icons (web + Android)
-```
-
-To preview the web app locally, serve `web/` (e.g. `npx serve web`). Google sign-in only works on `localhost` or on your Firebase domains.
+<sub>Setup and maintenance notes are in [docs/SETUP.md](docs/SETUP.md). Pokémon © Nintendo / Game Freak / The Pokémon Company; this is a personal project, not for app stores.</sub>
